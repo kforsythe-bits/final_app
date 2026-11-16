@@ -2,6 +2,7 @@ import csv
 import datetime
 
 ACTIVE_CSV = "active_submissions.csv"
+HISTORICAL_CSV = "historical_logs.csv"
 
 def load_submissions():
     submissions = {}
@@ -31,6 +32,36 @@ def save_submissions(submissions):
                 "Score": details["score"],
                 "Status": details["status"],
                 "DateReceived": details["date_received"]
+            })
+
+def load_logs():
+    logs = []
+    with open(HISTORICAL_CSV, mode="r") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            logs.append({
+                "log_id": row["LogID"],
+                "title": row["Title"],
+                "reviewer_id": row["ReviewerID"],
+                "days_in_queue": int(row["DaysInQueue"]),
+                "final_decision": row["FinalDecision"],
+                "date_received": row["DateReceived"]
+            })
+    return logs
+
+def save_logs(logs):
+    with open(HISTORICAL_CSV, mode="w", newline="") as file:
+        fieldnames = ["LogID", "Title", "ReviewerID", "DaysInQueue", "FinalDecision", "DateReceived"]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        for log in logs:
+            writer.writerow({
+                "LogID": log["log_id"],
+                "Title": log["title"],
+                "ReviewerID": log["reviewer_id"],
+                "DaysInQueue": log["days_in_queue"],
+                "FinalDecision": log["final_decision"],
+                "DateReceived": log["date_received"]
             })
 
 def show_menu():
@@ -66,7 +97,6 @@ def log_or_update_submission(submissions):
             new_score = float(input("Assign structural quality rating score (1.0 - 5.0): "))
             if 1.0 <= new_score <= 5.0:
                 submissions[title]["score"] = new_score
-                
                 print("Select Status: 1) Accepted  2) Rejected  3) Pending Review")
                 status_choice = input("Enter status number choice: ").strip()
                 status_map = {"1": "Accepted", "2": "Rejected", "3": "Pending Review"}
@@ -91,8 +121,61 @@ def log_or_update_submission(submissions):
         }
         print(f"Success: '{title}' added to the queue under 'Pending Review'.")
 
+def record_pitch_review(submissions, logs):
+    print("\n--- Review and Score Active Pitches ---")
+    title = input("Enter Comic Project Title to review: ").strip()
+    
+    if title not in submissions:
+        print(f"Validation Error: '{title}' does not exist in active submissions.")
+        return
+
+    reviewer_id = input("Enter Reviewer ID (e.g., REV-01): ").strip().upper()
+    if not reviewer_id:
+        print("Validation Error: Reviewer ID cannot be blank.")
+        return
+
+    try:
+        score = float(input("Enter Technical Score (1.0 - 5.0): "))
+        if not (1.0 <= score <= 5.0):
+            print("Validation Error: Score must be between 1.0 and 5.0.")
+            return
+
+        days_in_queue = int(input("Enter Days Spent in Queue: "))
+        if days_in_queue < 0:
+            print("Validation Error: Days in queue cannot be negative.")
+            return
+    except ValueError:
+        print("Validation Error: Please enter valid numbers for score and days.")
+        return
+
+    print("Select Final Decision: 1) Accepted  2) Rejected")
+    decision_choice = input("Enter choice (1 or 2): ").strip()
+    if decision_choice == "1":
+        decision = "Accepted"
+    elif decision_choice == "2":
+        decision = "Rejected"
+    else:
+        print("Validation Error: Invalid decision choice. Review canceled.")
+        return
+
+    submissions[title]["score"] = score
+    submissions[title]["status"] = decision
+
+    new_log_id = f"LOG-{8821 + len(logs)}"
+    logs.append({
+        "log_id": new_log_id,
+        "title": title,
+        "reviewer_id": reviewer_id,
+        "days_in_queue": days_in_queue,
+        "final_decision": decision,
+        "date_received": submissions[title]["date_received"]
+    })
+
+    print(f"Success! Review {new_log_id} recorded for '{title}' ({decision}, Score: {score}).")
+
 def main():
     submission_database = load_submissions()
+    historical_logs = load_logs()
     
     while True:
         show_menu()
@@ -103,17 +186,17 @@ def main():
         elif choice == 'b':
             view_submissions(submission_database)
         elif choice == 'c':
-            print("\n[Coming soon] Review and Score Active Pitches")
+            record_pitch_review(submission_database, historical_logs)
         elif choice == 'd':
             print("\n[Coming soon] Run Quarter Simulation & Generate Charts")
         elif choice == 'e':
             print("\n[Coming soon] Generate Automated Correspondence")
         elif choice == 'f':
             save_submissions(submission_database)
-            print("\nDatabase saved successfully. Terminating operational run loop. Goodbye.")
+            save_logs(historical_logs)
+            print("\nAll CSV databases saved successfully. Goodbye.")
             break
         else:
             print("\nInvalid choice! Please select a valid letter from the menu (a-f).")
-
 
 main()
