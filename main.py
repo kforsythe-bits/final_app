@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import csv
 import datetime
 
@@ -71,9 +72,10 @@ def show_menu():
     print("a. Log or Update a Comic Submission")
     print("b. View All Active Pitches")
     print("c. Review and Score Active Pitches (Record Review)")
-    print("d. Run Quarter Simulation & Generate Charts")
-    print("e. Generate Automated Correspondence")
-    print("f. Save and Exit")
+    print("d. View Editorial Review Summary Report")
+    print("e. Generate Analytical Charts")
+    print("f. Generate Automated Correspondence")
+    print("g. Save and Exit")
     print("=============================================")
 
 def view_submissions(submissions):
@@ -210,6 +212,51 @@ def show_report(submissions, logs):
         print(f"   {reviewer}: {count} pitch(es)")
     print("---------------------------------------")
 
+def generate_charts(submissions, logs):
+    if not logs or not submissions:
+        print("\n[System Alert] Insufficient database volume to generate analytical graphs.")
+        return
+
+    genre_scores = {}
+    genre_counts = {}
+    
+    for title, details in submissions.items():
+        gen = details["genre"]
+        if gen not in genre_scores:
+            genre_scores[gen] = 0.0
+            genre_counts[gen] = 0
+        genre_scores[gen] += details["score"]
+        genre_counts[gen] += 1
+
+    genres_list = list(genre_scores.keys())
+    avg_scores_list = []
+    for g in genres_list:
+        avg_scores_list.append(genre_scores[g] / genre_counts[g])
+
+    plt.figure()
+    plt.bar(genres_list, avg_scores_list, color="skyblue", edgecolor="black")
+    plt.title("Average Talent Evaluation Score by Genre")
+    plt.xlabel("Comic Book Genres")
+    plt.ylabel("Average Structural Score (1-5)")
+    plt.savefig("genre_scores_bar.png")
+    plt.close()
+
+    log_ids = []
+    wait_times = []
+    for log in logs:
+        log_ids.append(log["log_id"])
+        wait_times.append(log["days_in_queue"])
+
+    plt.figure()
+    plt.plot(log_ids, wait_times, marker="o", color="purple", linestyle="-", linewidth=2)
+    plt.title("Slush Pile Pipeline Wait Time Trend")
+    plt.xlabel("Review Log Record Sequence")
+    plt.ylabel("Days Spent in Processing Queue")
+    plt.savefig("queue_wait_line.png")
+    plt.close()
+
+    print("\n[Graphics Engine] Graphs compiled and saved as PNG graphics inside project folder!")   
+
 def main():
     submission_database = load_submissions()
     historical_logs = load_logs()
@@ -227,7 +274,7 @@ def main():
         elif choice == 'd':
             show_report(submission_database, historical_logs)
         elif choice == 'e':
-            print("\n[Coming soon] Generate Analytical Charts")
+            generate_charts(submission_database, historical_logs)
         elif choice == 'f':
             print("\n[Coming soon] Generate Automated Correspondence")
         elif choice == 'g':
