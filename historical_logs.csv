@@ -1,0 +1,8 @@
+LogID,Title,ReviewerID,DaysInQueue,FinalDecision,DateReceived
+>> LOG-8821,Galactic Detectives,REV-01,6,Accepted,10/26/2026
+>> LOG-8822,Broken Gargoyle,REV-02,12,Rejected,10/28/2026
+LOG-8823,Gear-Bound,REV-03,0,Accepted,2026-11-15
+LOG-8824,Batboy,REV-01,0,Rejected,2026-11-16
+LOG-8825,Sharks and Minnows,REV-03,0,Accepted,2026-11-16
+LOG-8826,Oddity,REV-01,0,Accepted,2026-11-22
+LOG-8827,Dr. EvilsteinenBerg the Second,REV-03,20,Rejected,2026-11-22
