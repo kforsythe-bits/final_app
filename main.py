@@ -173,13 +173,50 @@ def record_pitch_review(submissions, logs):
 
     print(f"Success! Review {new_log_id} recorded for '{title}' ({decision}, Score: {score}).")
 
+def show_report(submissions, logs):
+    if not logs:
+        print("\n[System Alert] No review transactions recorded yet.")
+        return
+
+    total_reviews = len(logs)
+    total_days = 0
+    max_days = -1
+    slowest_pitch = ""
+    
+    reviewer_counts = {}
+
+    for log in logs:
+        total_days += log["days_in_queue"]
+        
+        if log["days_in_queue"] > max_days:
+            max_days = log["days_in_queue"]
+            slowest_pitch = log["title"]
+            
+        rev_id = log["reviewer_id"]
+        if rev_id not in reviewer_counts:
+            reviewer_counts[rev_id] = 0
+        reviewer_counts[rev_id] += 1
+
+    avg_days = total_days / total_reviews
+
+    print("\n--- EDITORIAL REVIEW SUMMARY REPORT ---")
+    print(f"Total Reviews Logged:     {total_reviews}")
+    print(f"Total Combined Queue Days: {total_days} days")
+    print(f"Average Processing Speed:  {avg_days:.1f} days per pitch")
+    print(f"Slowest Pipeline Bottleneck: '{slowest_pitch}' ({max_days} days in pile)")
+    
+    print("\nTotal Completed Evaluations by Reviewer:")
+    for reviewer, count in reviewer_counts.items():
+        print(f"   {reviewer}: {count} pitch(es)")
+    print("---------------------------------------")
+
 def main():
     submission_database = load_submissions()
     historical_logs = load_logs()
     
     while True:
         show_menu()
-        choice = input("Select an option (a-f): ").strip().lower()
+        choice = input("Select an option (a-g): ").strip().lower()
         
         if choice == 'a':
             log_or_update_submission(submission_database)
@@ -188,15 +225,17 @@ def main():
         elif choice == 'c':
             record_pitch_review(submission_database, historical_logs)
         elif choice == 'd':
-            print("\n[Coming soon] Run Quarter Simulation & Generate Charts")
+            show_report(submission_database, historical_logs)
         elif choice == 'e':
-            print("\n[Coming soon] Generate Automated Correspondence")
+            print("\n[Coming soon] Generate Analytical Charts")
         elif choice == 'f':
+            print("\n[Coming soon] Generate Automated Correspondence")
+        elif choice == 'g':
             save_submissions(submission_database)
             save_logs(historical_logs)
             print("\nAll CSV databases saved successfully. Goodbye.")
             break
         else:
-            print("\nInvalid choice! Please select a valid letter from the menu (a-f).")
+            print("\nInvalid choice! Please select a valid letter from the menu (a-g).")
 
 main()
