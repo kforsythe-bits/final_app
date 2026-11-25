@@ -51,5 +51,11 @@ def run_simulation():
         print("\nNone of the options were sufficient. Recruit more reviewer staff.")
     else:
         print("\nRecommendation: Schedule", recommended, "editors to manage submission flow.")
-
-run_simulation()
+    
+    plt.figure()
+    plt.bar(options, results, color="teal", edgecolor="black")
+    plt.title("High-Scoring Pitches Bottlenecked per Quarter")
+    plt.xlabel("Number of Scheduled Editors")
+    plt.ylabel("Avg Bottlenecked Submissions")
+    plt.savefig("simulation_results.png")
+    plt.close()
